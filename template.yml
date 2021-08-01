@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  chat-backend-app
+
+Transform:
+- AWS::Serverless-2016-10-31
+
+Resources:
+  HealthCheck:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/health-check.healthCheckHandler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 5
+      Description: Ensure that endpoint works
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+
+  UserRegistration:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/user-registration/user-registration.userRegistrationHandler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 5
+      Description: Register User
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /user
+            Method: POST
+
+  GetAllS3FilesPath:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/file-upload/file-service.getAllfilesHandler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 5
+      Description: Get all files path stored in DynamoDB
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /s3-files
+            Method: GET
+  
+  UploadFileToS3:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/file-upload/file-service.uploadFileHandler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 5
+      Description: Load a .txt file onto S3
+      Events:
+        Api:
+          Cors:
+            AllowHeaders: "'Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization'" 
+            AllowOrigin: "'*'"
+          Auth:
+            AddDefaultAuthorizerToCorsPreflight: False
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: POST
+Outputs:
+  WebEndpoint:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
